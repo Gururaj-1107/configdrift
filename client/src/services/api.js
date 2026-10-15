@@ -18,8 +18,51 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+// System Health
 export const checkHealth = async () => {
   const response = await api.get('/health');
+  return response.data;
+};
+
+// Auth Services
+export const registerUserApi = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const loginUserApi = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const getMeApi = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
+
+// Project Services
+export const getProjectsApi = async () => {
+  const response = await api.get('/projects');
+  return response.data;
+};
+
+export const createProjectApi = async (projectData) => {
+  const response = await api.post('/projects', projectData);
+  return response.data;
+};
+
+export const getProjectByIdApi = async (id) => {
+  const response = await api.get(`/projects/${id}`);
+  return response.data;
+};
+
+export const updateProjectApi = async (id, projectData) => {
+  const response = await api.put(`/projects/${id}`, projectData);
+  return response.data;
+};
+
+export const deleteProjectApi = async (id) => {
+  const response = await api.delete(`/projects/${id}`);
   return response.data;
 };
 

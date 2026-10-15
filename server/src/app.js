@@ -44,9 +44,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// Placeholder route for forthcoming Phase 2-6 modules
-// app.use('/api/auth', authRoutes);
-// app.use('/api/projects', projectRoutes);
+const authRoutes = require('./routes/authRoutes');
+const projectRoutes = require('./routes/projectRoutes');
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Error handlers
 app.use(notFound);

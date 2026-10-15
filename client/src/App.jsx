@@ -1,33 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
 import { 
   ShieldCheck, 
   Layers, 
   Terminal, 
   Database, 
   GitBranch, 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  LogOut,
+  User,
+  ArrowLeft,
+  AlertTriangle,
+  FolderKanban,
+  CheckCircle2
 } from 'lucide-react';
 import { checkHealth } from './services/api';
 
-export default function App() {
+function AppContent() {
+  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
   const [health, setHealth] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [authView, setAuthView] = useState('login'); // 'login' | 'register'
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const fetchHealth = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      setHealthLoading(true);
       const data = await checkHealth();
       setHealth(data);
     } catch (err) {
-      setError(err.message || 'Failed to connect to ConfigDrift API');
+      setHealth(null);
     } finally {
-      setLoading(false);
+      setHealthLoading(false);
     }
   };
 
@@ -40,25 +48,25 @@ export default function App() {
       id: 1,
       title: 'Phase 1: Project Foundation & Baseline',
       dev: 'Primary Developer (You)',
-      status: 'In Progress (Active)',
+      status: 'Completed',
       desc: 'Monorepo scaffold, Express backend, React Vite Tailwind frontend, health check API, and Git setup.',
-      active: true,
-      completed: false,
+      active: false,
+      completed: true,
     },
     {
       id: 2,
       title: 'Phase 2: Authentication & Project Workspace',
-      dev: 'Teammate',
-      status: 'Next Up',
+      dev: 'Primary Developer (You)',
+      status: 'Active (Current)',
       desc: 'JWT auth, user registration/login, protected routes, and project CRUD dashboard with empty states.',
-      active: false,
+      active: true,
       completed: false,
     },
     {
       id: 3,
       title: 'Phase 3: Environment Snapshots & Parsers',
       dev: 'Primary Developer (You)',
-      status: 'Planned',
+      status: 'Next Up',
       desc: 'Dev, Test, Prod snapshot models, key-value table, .env & JSON parsers, and secret detection.',
       active: false,
       completed: false,
@@ -92,12 +100,24 @@ export default function App() {
     },
   ];
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 gap-3">
+        <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
+        <span className="text-sm font-mono">Initializing ConfigDrift...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-brand-500 selection:text-black">
-      {/* Top Navbar */}
+      {/* Top Navigation */}
       <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div 
+            onClick={() => setSelectedProject(null)}
+            className="flex items-center gap-3 cursor-pointer select-none"
+          >
             <div className="h-9 w-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
@@ -113,166 +133,190 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-400">Backend API:</span>
-              {loading ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                  <RefreshCw className="w-3 h-3 animate-spin text-slate-400" /> Connecting
-                </span>
-              ) : health?.status === 'healthy' ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60">
+            {/* Health Status Indicator */}
+            <div className="hidden sm:flex items-center gap-2 text-xs">
+              <span className="text-slate-400">API:</span>
+              {health?.status === 'healthy' ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono text-[11px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Healthy
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800/60">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800/60 font-mono text-[11px]">
                   <AlertTriangle className="w-3 h-3 text-amber-400" />
-                  {error || 'Offline'}
+                  Offline
                 </span>
               )}
             </div>
 
-            <button
-              onClick={fetchHealth}
-              title="Ping Backend Health"
-              className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors border border-slate-800"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            {/* Auth status buttons */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
+                <div className="hidden md:flex flex-col text-right">
+                  <span className="text-xs font-semibold text-slate-200">{user.name}</span>
+                  <span className="text-[11px] text-slate-400 font-mono">{user.email}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  title="Logout"
+                  className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors border border-slate-700/80"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-b from-slate-900 to-slate-900/60 border border-slate-800 rounded-xl p-6 sm:p-8">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-mono mb-4">
-              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Phase 1 Verification: Working Foundation Ready</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-50 mb-3">
-              Detect & Prevent Configuration Drift Across Environments
-            </h1>
-            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-              ConfigDrift continuously verifies environment variable parity between Development, Testing, and Production before inconsistent timeouts, unmasked credentials, or missing keys cause silent deployment failures.
-            </p>
-          </div>
-
-          {/* Quick Architecture Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-slate-800/80">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <Layers className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
-              <div>
-                <h4 className="text-sm font-semibold text-slate-200">Frontend Stack</h4>
-                <p className="text-xs text-slate-400 mt-0.5">React 18, Vite, Tailwind CSS, Lucide</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <Terminal className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
-              <div>
-                <h4 className="text-sm font-semibold text-slate-200">Backend API</h4>
-                <p className="text-xs text-slate-400 mt-0.5">Node.js, Express, Helmet, CORS, Morgan</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <Database className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
-              <div>
-                <h4 className="text-sm font-semibold text-slate-200">Database</h4>
-                <p className="text-xs text-slate-400 mt-0.5">MongoDB with Mongoose (Local / Atlas)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Live System Diagnostics */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider font-mono">System Diagnostics</h3>
-            </div>
-            <span className="text-xs text-slate-400">Endpoint: /api/health</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-              <p className="text-xs text-slate-500 uppercase font-mono">Service Status</p>
-              <p className="text-sm font-semibold text-slate-200 mt-1 capitalize">
-                {health?.status || (loading ? 'Checking...' : 'Unavailable')}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-              <p className="text-xs text-slate-500 uppercase font-mono">API Version</p>
-              <p className="text-sm font-semibold text-slate-200 mt-1 font-mono">
-                {health?.version || '1.0.0'}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-              <p className="text-xs text-slate-500 uppercase font-mono">MongoDB State</p>
-              <p className="text-sm font-semibold text-slate-200 mt-1 capitalize">
-                {health?.database?.status || 'Waiting for connection'}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-              <p className="text-xs text-slate-500 uppercase font-mono">Server Uptime</p>
-              <p className="text-sm font-semibold text-slate-200 mt-1 font-mono">
-                {health?.uptime !== undefined ? `${health.uptime}s` : 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 6-Phase Collaboration Roadmap */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-100">6-Phase Implementation Roadmap</h2>
-              <p className="text-xs text-slate-400">Structured alternation between Primary Developer and Teammate</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-              <GitBranch className="w-4 h-4 text-emerald-400" />
-              <span>Target: main</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {phases.map((phase) => (
-              <div 
-                key={phase.id}
-                className={`p-5 rounded-xl border transition-all ${
-                  phase.active 
-                    ? 'bg-slate-900 border-emerald-500/50 ring-1 ring-emerald-500/30' 
-                    : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded ${
-                    phase.active 
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
-                  }`}>
-                    {phase.status}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-400">{phase.dev}</span>
+      {/* Main Content View */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isAuthenticated ? (
+          selectedProject ? (
+            /* Project Detail View (Prepares for Phase 3 Snapshots) */
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="w-5 h-5 text-emerald-400" />
+                      <h1 className="text-xl font-bold text-slate-100">{selectedProject.name}</h1>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">{selectedProject.description || 'No description'}</p>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-slate-100 text-sm mb-2">{phase.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{phase.desc}</p>
+
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                  <span>Project ID:</span>
+                  <span className="bg-slate-900 px-2 py-1 rounded border border-slate-800">{selectedProject._id}</span>
+                </div>
               </div>
-            ))}
+
+              {/* Environments Placeholder Card */}
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-200">Active Environments & Snapshots</h3>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    Phase 3 Scope
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Snapshot models, structured key-value editor, .env and JSON parsers, and secret auto-masking will be wired directly into this workspace in Phase 3.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3">
+                  <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
+                    <span className="text-xs font-mono font-semibold text-blue-400">DEVELOPMENT</span>
+                    <p className="text-xs text-slate-400 mt-2">Ready for snapshot v1 (.env / JSON)</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
+                    <span className="text-xs font-mono font-semibold text-purple-400">TESTING / STAGING</span>
+                    <p className="text-xs text-slate-400 mt-2">Ready for snapshot v1 (.env / JSON)</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-950 border border-slate-800">
+                    <span className="text-xs font-mono font-semibold text-emerald-400">PRODUCTION</span>
+                    <p className="text-xs text-slate-400 mt-2">Ready for snapshot v1 (.env / JSON)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Dashboard View */
+            <Dashboard onSelectProject={(p) => setSelectedProject(p)} />
+          )
+        ) : (
+          /* Unauthenticated Landing & Auth View */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Product Value & Phase Tracker */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="bg-gradient-to-b from-slate-900 to-slate-900/60 border border-slate-800 rounded-xl p-6 sm:p-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-mono mb-4">
+                  <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Phase 2 Active: User Auth & Project Workspace</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-50 mb-3">
+                  Developer Platform for Configuration Reliability
+                </h1>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  ConfigDrift catches inconsistent timeouts, forbidden debug flags, unmasked credentials, and missing environment variables before they trigger production incidents.
+                </p>
+
+                {/* Tech Highlights */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-800/80">
+                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    <p className="text-[11px] font-mono text-slate-500 uppercase">Frontend</p>
+                    <p className="text-xs font-semibold text-slate-200 mt-0.5">React 18 + Vite</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    <p className="text-[11px] font-mono text-slate-500 uppercase">Backend</p>
+                    <p className="text-xs font-semibold text-slate-200 mt-0.5">Node.js + Express</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    <p className="text-[11px] font-mono text-slate-500 uppercase">Database</p>
+                    <p className="text-xs font-semibold text-slate-200 mt-0.5">MongoDB Mongoose</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phased Roadmap List */}
+              <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 text-emerald-400" />
+                  <span>6-Phase Implementation Roadmap</span>
+                </h3>
+                <div className="space-y-2.5">
+                  {phases.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
+                        p.active 
+                          ? 'bg-slate-900 border-emerald-500/50 text-slate-200' 
+                          : p.completed
+                          ? 'bg-slate-950/60 border-slate-800/80 text-slate-400'
+                          : 'bg-slate-950/40 border-slate-800/40 text-slate-500'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        {p.completed ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        ) : p.active ? (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                        ) : (
+                          <span className="w-2 h-2 rounded-full bg-slate-700 shrink-0"></span>
+                        )}
+                        <span className="font-medium">{p.title}</span>
+                      </div>
+                      <span className="font-mono text-[11px] text-slate-400">{p.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Authentication Form */}
+            <div className="lg:col-span-5">
+              {authView === 'login' ? (
+                <Login onSwitchToRegister={() => setAuthView('register')} />
+              ) : (
+                <Register onSwitchToLogin={() => setAuthView('login')} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950 py-6 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>ConfigDrift — Full-Stack Development Assignment Project</div>
+          <div>ConfigDrift — Environment Configuration Validator</div>
           <div className="flex items-center gap-4">
-            <span className="font-mono">Branch: main</span>
+            <span className="font-mono">Branch: feature/user-auth</span>
             <span>•</span>
             <a 
               href="https://github.com/Gururaj-1107/configdrift" 
@@ -286,5 +330,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
