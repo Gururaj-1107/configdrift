@@ -1,193 +1,235 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './components/Toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ProjectWorkspace from './pages/ProjectWorkspace';
-import { 
-  ShieldCheck, 
-  Layers, 
-  Terminal, 
-  Database, 
+import {
+  ShieldCheck,
+  Layers,
+  Terminal,
   RefreshCw,
   ExternalLink,
   LogOut,
   AlertTriangle,
   GitCompare,
   FileCheck2,
-  Lock
+  Lock,
 } from 'lucide-react';
 import { checkHealth } from './services/api';
 
 function AppContent() {
   const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
   const [health, setHealth] = useState(null);
-  const [healthLoading, setHealthLoading] = useState(true);
   const [authView, setAuthView] = useState('login'); // 'login' | 'register'
   const [selectedProject, setSelectedProject] = useState(null);
 
   const fetchHealth = async () => {
     try {
-      setHealthLoading(true);
       const data = await checkHealth();
       setHealth(data);
-    } catch (err) {
+    } catch {
       setHealth(null);
-    } finally {
-      setHealthLoading(false);
     }
   };
 
   useEffect(() => {
     fetchHealth();
+    // Refresh health every 60s
+    const interval = setInterval(fetchHealth, 60_000);
+    return () => clearInterval(interval);
   }, []);
+
+  // When auth state changes, reset project selection
+  useEffect(() => {
+    if (!isAuthenticated) setSelectedProject(null);
+  }, [isAuthenticated]);
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
-        <span className="text-sm font-mono">Initializing ConfigDrift...</span>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div className="absolute -inset-1 rounded-xl border border-emerald-500/20 animate-ping" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-slate-300">Initializing ConfigDrift</p>
+            <p className="text-xs text-slate-500 font-mono mt-1">Restoring session...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-brand-500 selection:text-black">
-      {/* Top Navigation */}
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div 
-            onClick={() => setSelectedProject(null)}
-            className="flex items-center gap-3 cursor-pointer select-none"
-          >
-            <div className="h-9 w-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold tracking-tight text-slate-100 text-lg">ConfigDrift</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                  v1.0.0
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 hidden sm:block">Environment Configuration Validator</p>
-            </div>
-          </div>
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500/20 selection:text-emerald-100">
 
-          <div className="flex items-center gap-4">
-            {/* System Health */}
-            <div className="hidden sm:flex items-center gap-2 text-xs">
-              <span className="text-slate-400">System API:</span>
+      {/* ── Top Navigation ─────────────────────────── */}
+      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+
+          {/* Brand */}
+          <button
+            onClick={() => setSelectedProject(null)}
+            className="flex items-center gap-2.5 group focus:outline-none"
+            title="Go to dashboard"
+          >
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/15 transition-colors">
+              <ShieldCheck className="w-4.5 h-4.5" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold tracking-tight text-slate-100 text-base">ConfigDrift</span>
+              <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                v1.0.0
+              </span>
+            </div>
+          </button>
+
+          {/* Right Side */}
+          <div className="flex items-center gap-3">
+            {/* Health pill */}
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
               {health?.status === 'healthy' ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono text-[11px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Operational
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/50 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  API Healthy
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800/60 font-mono text-[11px]">
-                  <AlertTriangle className="w-3 h-3 text-amber-400" />
-                  Offline
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-800/50 font-mono">
+                  <AlertTriangle className="w-3 h-3" />
+                  API Offline
                 </span>
               )}
             </div>
 
-            {/* Authenticated User Menu */}
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
+            {/* User menu */}
+            {isAuthenticated && (
+              <div className="flex items-center gap-2.5 pl-3 border-l border-slate-800">
                 <div className="hidden md:flex flex-col text-right">
-                  <span className="text-xs font-semibold text-slate-200">{user.name}</span>
-                  <span className="text-[11px] text-slate-400 font-mono">{user.email}</span>
+                  <span className="text-xs font-semibold text-slate-200 leading-tight">{user?.name}</span>
+                  <span className="text-[10px] text-slate-500 font-mono">{user?.email}</span>
+                </div>
+                {/* Avatar circle */}
+                <div className="h-7 w-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 uppercase">
+                  {user?.name?.[0] ?? '?'}
                 </div>
                 <button
                   onClick={logout}
                   title="Sign Out"
-                  className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors border border-slate-700/80"
+                  aria-label="Sign out"
+                  className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-red-400 transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main Content Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Main Content ───────────────────────────── */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isAuthenticated ? (
           selectedProject ? (
-            /* Project Workspace with Snapshots, Ingestion, and Variables Table */
-            <ProjectWorkspace 
-              project={selectedProject} 
-              onBack={() => setSelectedProject(null)} 
+            <ProjectWorkspace
+              project={selectedProject}
+              onBack={() => setSelectedProject(null)}
             />
           ) : (
-            /* Projects Dashboard */
             <Dashboard onSelectProject={(p) => setSelectedProject(p)} />
           )
         ) : (
-          /* Professional Landing & Authentication */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7 space-y-6">
-              <div className="bg-gradient-to-b from-slate-900 to-slate-900/60 border border-slate-800 rounded-xl p-6 sm:p-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-mono mb-4">
+          /* Landing + Auth panel */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
+
+            {/* Left column — product pitch */}
+            <div className="lg:col-span-7 space-y-5">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-xl p-7">
+                {/* Label chip */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-mono mb-5">
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Production Configuration Reliability</span>
+                  <span>Environment Configuration Reliability</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-50 mb-3">
-                  Detect & Prevent Environment Configuration Drift
+
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-50 mb-3 leading-snug">
+                  Detect & Prevent<br />Configuration Drift
                 </h1>
-                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                  ConfigDrift audits configuration parity across Development, Testing, and Production environments before inconsistent timeouts, unmasked secrets, or missing variables cause critical deployment failures.
+                <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
+                  ConfigDrift audits parity across Development, Testing, and Production — catching missing variables, unmasked secrets, and format mismatches before they cause deployment failures.
                 </p>
 
-                {/* Feature Highlights Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 pt-6 border-t border-slate-800/80">
-                  <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-start gap-3">
-                    <Layers className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-200">Snapshot Management</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Capture snapshots from .env or JSON with version history.</p>
+                {/* Feature grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7 pt-6 border-t border-slate-800">
+                  {[
+                    {
+                      icon: Layers,
+                      color: 'text-emerald-400',
+                      bg: 'bg-emerald-500/8',
+                      title: 'Snapshot Management',
+                      desc: 'Ingest .env or JSON configs, version them, and compare across branches.'
+                    },
+                    {
+                      icon: GitCompare,
+                      color: 'text-blue-400',
+                      bg: 'bg-blue-500/8',
+                      title: 'Drift Detection',
+                      desc: 'Algorithmically surfaces missing, extra, and mismatched environment keys.'
+                    },
+                    {
+                      icon: FileCheck2,
+                      color: 'text-purple-400',
+                      bg: 'bg-purple-500/8',
+                      title: 'Rule Validation',
+                      desc: 'Enforce numeric ranges, URL patterns, and production environment guards.'
+                    },
+                    {
+                      icon: Lock,
+                      color: 'text-amber-400',
+                      bg: 'bg-amber-500/8',
+                      title: 'Secret Masking',
+                      desc: 'Auto-redacts credentials, private keys, and auth tokens in every view.'
+                    },
+                  ].map(({ icon: Icon, color, bg, title, desc }) => (
+                    <div key={title} className="flex items-start gap-3 p-4 rounded-lg bg-slate-950/70 border border-slate-800/60 hover:border-slate-700 transition-colors">
+                      <div className={`w-7 h-7 rounded-md ${bg} border border-slate-800 flex items-center justify-center shrink-0`}>
+                        <Icon className={`w-3.5 h-3.5 ${color}`} />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-200 mb-0.5">{title}</h3>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">{desc}</p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-start gap-3">
-                    <GitCompare className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-200">Deterministic Comparison</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Algorithmically detects missing, extra, and mismatched keys.</p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-start gap-3">
-                    <FileCheck2 className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-200">Rule Validation</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Enforce numeric ranges, URL formats, and environment guards.</p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-start gap-3">
-                    <Lock className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-200">Secret Masking</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Auto-redacts credentials, private keys, and authorization tokens.</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Architecture Stack */}
-              <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
-                <span>Stack: React 18 (Vite) + Tailwind CSS</span>
-                <span>•</span>
+              {/* Stack strip */}
+              <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-slate-900/40 border border-slate-800 text-[11px] text-slate-500 font-mono">
+                <span>React 18 + Vite</span>
+                <span className="text-slate-700">•</span>
+                <span>Tailwind CSS</span>
+                <span className="text-slate-700">•</span>
                 <span>Node.js + Express</span>
-                <span>•</span>
+                <span className="text-slate-700">•</span>
                 <span>MongoDB</span>
+                <span className="text-slate-700">•</span>
+                <a
+                  href="https://github.com/Gururaj-1107/configdrift"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-emerald-500 hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                >
+                  GitHub <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
             </div>
 
-            {/* Right Column: Authentication Form */}
-            <div className="lg:col-span-5">
+            {/* Right column — auth panel */}
+            <div className="lg:col-span-5 animate-slide-up" style={{ animationDelay: '60ms' }}>
               {authView === 'login' ? (
                 <Login onSwitchToRegister={() => setAuthView('register')} />
               ) : (
@@ -198,20 +240,18 @@ function AppContent() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-950 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>ConfigDrift — Environment Configuration Validator</div>
-          <div className="flex items-center gap-4">
-            <a 
-              href="https://github.com/Gururaj-1107/configdrift" 
-              target="_blank" 
-              rel="noreferrer"
-              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition-colors font-mono"
-            >
-              GitHub Repository <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+      {/* ── Footer ─────────────────────────────────── */}
+      <footer className="border-t border-slate-800/60 bg-slate-950 py-5 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-600">
+          <span>ConfigDrift — Environment Configuration Validator</span>
+          <a
+            href="https://github.com/Gururaj-1107/configdrift"
+            target="_blank"
+            rel="noreferrer"
+            className="text-slate-500 hover:text-emerald-400 flex items-center gap-1 transition-colors font-mono"
+          >
+            GitHub <ExternalLink className="w-2.5 h-2.5" />
+          </a>
         </div>
       </footer>
     </div>
@@ -221,7 +261,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AuthProvider>
   );
 }
