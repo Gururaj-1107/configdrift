@@ -30,7 +30,14 @@ import {
   ChevronsUpDown,
   Upload,
   Sparkles,
+  GitCompare,
+  FileCheck2,
+  FileText,
 } from 'lucide-react';
+import ComparisonTab from '../components/ComparisonTab';
+import ValidationRulesTab from '../components/ValidationRulesTab';
+import DriftReportsTab from '../components/DriftReportsTab';
+
 
 /* ============================
    CONSTANTS
@@ -591,6 +598,7 @@ function VariablesTable({ variables, maskAllSecrets }) {
 export default function ProjectWorkspace({ project, onBack }) {
   const toast = useToast();
 
+  const [workspaceTab, setWorkspaceTab]         = useState('snapshots'); // 'snapshots' | 'comparison' | 'rules' | 'reports'
   const [activeEnv, setActiveEnv]               = useState('development');
   const [snapshots, setSnapshots]               = useState([]);
   const [selectedSnapshot, setSelectedSnapshot] = useState(null);
@@ -676,35 +684,79 @@ export default function ProjectWorkspace({ project, onBack }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {/* Global mask toggle */}
-          <button
-            onClick={() => setMaskAllSecrets((v) => !v)}
-            title={maskAllSecrets ? 'Reveal all secrets' : 'Mask all secrets'}
-            aria-label={maskAllSecrets ? 'Reveal all secrets' : 'Mask all secrets'}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500
-              ${maskAllSecrets
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/15'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}`}
-          >
-            {maskAllSecrets
-              ? <><EyeOff className="w-3.5 h-3.5" /><span className="hidden sm:inline">Masked</span></>
-              : <><Eye className="w-3.5 h-3.5" /><span className="hidden sm:inline">Revealed</span></>
-            }
-          </button>
+        {workspaceTab === 'snapshots' && (
+          <div className="flex items-center gap-2.5">
+            {/* Global mask toggle */}
+            <button
+              onClick={() => setMaskAllSecrets((v) => !v)}
+              title={maskAllSecrets ? 'Reveal all secrets' : 'Mask all secrets'}
+              aria-label={maskAllSecrets ? 'Reveal all secrets' : 'Mask all secrets'}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500
+                ${maskAllSecrets
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/15'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}`}
+            >
+              {maskAllSecrets
+                ? <><EyeOff className="w-3.5 h-3.5" /><span className="hidden sm:inline">Masked</span></>
+                : <><Eye className="w-3.5 h-3.5" /><span className="hidden sm:inline">Revealed</span></>
+              }
+            </button>
 
-          {/* Capture snapshot button */}
-          <button
-            id="btn-capture-snapshot"
-            onClick={() => setModal(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors
-              shadow-lg shadow-emerald-950/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Capture Snapshot</span>
-          </button>
-        </div>
+            {/* Capture snapshot button */}
+            <button
+              id="btn-capture-snapshot"
+              onClick={() => setModal(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors
+                shadow-lg shadow-emerald-950/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Capture Snapshot</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* ── Workspace Sub-Navigation Tabs ── */}
+      <div className="flex items-center gap-1 border-b border-slate-800 pb-px">
+        {[
+          { id: 'snapshots', label: 'Snapshots', icon: Layers },
+          { id: 'comparison', label: 'Comparison Engine', icon: GitCompare },
+          { id: 'rules', label: 'Validation Rules', icon: FileCheck2 },
+          { id: 'reports', label: 'Drift Reports', icon: FileText },
+        ].map(({ id, label, icon: Icon }) => {
+          const isActive = workspaceTab === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setWorkspaceTab(id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors border-b-2 -mb-px focus:outline-none ${
+                isActive
+                  ? 'border-emerald-500 text-emerald-400 bg-slate-900/60'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Tab Views ── */}
+      {workspaceTab === 'comparison' && (
+        <ComparisonTab project={project} onReportSaved={() => setWorkspaceTab('reports')} />
+      )}
+
+      {workspaceTab === 'rules' && (
+        <ValidationRulesTab project={project} />
+      )}
+
+      {workspaceTab === 'reports' && (
+        <DriftReportsTab project={project} />
+      )}
+
+      {workspaceTab === 'snapshots' && (
+        <div className="space-y-6">
 
       {/* ── Environment Tabs ── */}
       <div className="flex items-center justify-between border-b border-slate-800/60">
@@ -828,6 +880,8 @@ export default function ProjectWorkspace({ project, onBack }) {
           />
         </div>
       ) : null}
+        </div>
+      )}
 
       {/* ── Capture Snapshot Modal ── */}
       <Modal
