@@ -93,4 +93,61 @@ export const deleteSnapshotApi = async (projectId, snapshotId) => {
   return response.data;
 };
 
+// Comparison & Drift Report Services
+export const compareSnapshotsApi = async (projectId, { baseSnapshotId, targetSnapshotId }) => {
+  const response = await api.post(`/projects/${projectId}/compare`, {
+    baseSnapshotId,
+    targetSnapshotId,
+  });
+  return response.data;
+};
+
+export const saveDriftReportApi = async (projectId, { baseSnapshotId, targetSnapshotId }) => {
+  const response = await api.post(`/projects/${projectId}/reports`, {
+    baseSnapshotId,
+    targetSnapshotId,
+  });
+  return response.data;
+};
+
+export const getDriftReportsApi = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/reports`);
+  return response.data;
+};
+
+export const getDriftReportByIdApi = async (projectId, reportId) => {
+  const response = await api.get(`/projects/${projectId}/reports/${reportId}`);
+  return response.data;
+};
+
+export const exportDriftReportApi = async (projectId, reportId, format = 'json') => {
+  const response = await api.get(
+    `/projects/${projectId}/reports/${reportId}/export?format=${format}`,
+    { responseType: format === 'csv' ? 'blob' : 'json' }
+  );
+  return response.data;
+};
+
+// Validation Rule Services
+export const getValidationRulesApi = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/rules`);
+  return response.data;
+};
+
+export const createValidationRuleApi = async (projectId, ruleData) => {
+  const response = await api.post(`/projects/${projectId}/rules`, ruleData);
+  return response.data;
+};
+
+export const updateValidationRuleApi = async (projectId, ruleId, ruleData) => {
+  const response = await api.put(`/projects/${projectId}/rules/${ruleId}`, ruleData);
+  return response.data;
+};
+
+export const deleteValidationRuleApi = async (projectId, ruleId) => {
+  const response = await api.delete(`/projects/${projectId}/rules/${ruleId}`);
+  return response.data;
+};
+
 export default api;
+

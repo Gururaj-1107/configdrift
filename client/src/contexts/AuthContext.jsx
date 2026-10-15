@@ -8,6 +8,12 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('configdrift_token'));
   const [loading, setLoading] = useState(true);
 
+  const logout = React.useCallback(() => {
+    localStorage.removeItem('configdrift_token');
+    setToken(null);
+    setUser(null);
+  }, []);
+
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('configdrift_token');
@@ -28,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [logout]);
 
   const login = async (email, password) => {
     const res = await loginUserApi({ email, password });
@@ -50,12 +56,6 @@ export const AuthProvider = ({ children }) => {
       return res;
     }
     throw new Error(res.message || 'Registration failed');
-  };
-
-  const logout = () => {
-    localStorage.removeItem('configdrift_token');
-    setToken(null);
-    setUser(null);
   };
 
   return (

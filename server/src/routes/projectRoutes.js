@@ -21,8 +21,12 @@ router.route('/:id')
   .delete(deleteProject);
 
 const snapshotRoutes = require('./snapshotRoutes');
+const comparisonRoutes = require('./comparisonRoutes');
+const validationRuleRoutes = require('./validationRuleRoutes');
 
-// Nested Snapshot routes
+// Nested routes
 router.use('/:projectId/snapshots', snapshotRoutes);
+router.use('/:projectId/rules', validationRuleRoutes);
+router.use('/:projectId', comparisonRoutes);
 
 module.exports = router;
