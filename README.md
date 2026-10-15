@@ -12,32 +12,81 @@
 
 ## Table of Contents
 - [1. Overview & Problem Statement](#1-overview--problem-statement)
-- [2. Mandatory Tech Stack](#2-mandatory-tech-stack)
-- [3. 6-Phase Implementation Roadmap](#3-6-phase-implementation-roadmap)
-- [4. Project Architecture](#4-project-architecture)
+- [2. Key Features](#2-key-features)
+- [3. Architecture & System Design](#3-architecture--system-design)
+- [4. Technology Stack](#4-technology-stack)
 - [5. Getting Started Locally](#5-getting-started-locally)
 - [6. Environment Variables](#6-environment-variables)
-- [7. API Endpoints](#7-api-endpoints)
+- [7. API Reference](#7-api-reference)
 - [8. Running Tests](#8-running-tests)
-- [9. Two-Person GitHub Collaboration Workflow](#9-two-person-github-collaboration-workflow)
+- [9. Security & Secret Protection](#9-security--secret-protection)
 
 ---
 
 ## 1. Overview & Problem Statement
 
-Modern web applications depend on dozens of environment variables spanning API base URLs, feature flags, secret keys, timeouts, and port configurations.
+Modern software architectures depend on dozens of environment variables across distributed services. Discrepancies between environments frequently trigger deployment regressions:
+- A developer configures `API_TIMEOUT=5000` locally, but production runs with an uncalibrated default or missing key.
+- Development-only flags (e.g., `DEBUG=true`, `BYPASS_AUTH=true`) are inadvertently deployed to production.
+- Private credentials, tokens, and database passwords are exposed in plain text.
+- Variable data types (strings vs numbers vs booleans) diverge silently.
 
-When configurations between environments drift silently:
-- Local development works smoothly, but staging or production encounters fatal startup errors.
-- Critical timeouts differ without record (e.g. `API_TIMEOUT=5000` in dev vs `30000` in prod).
-- Development-only flags (like `DEBUG=true` or mock authentication) are accidentally deployed to production.
-- Sensitive API keys or credentials risk exposure in plain text.
-
-**ConfigDrift** eliminates these issues through deterministic comparison algorithms, type and range validation rules, secret masking, and exportable drift audit reports.
+**ConfigDrift** provides deterministic comparison algorithms, type and range validation rules, automatic secret detection, and exportable drift audit reports to maintain configuration parity across all deployment stages.
 
 ---
 
-## 2. Mandatory Tech Stack
+## 2. Key Features
+
+- **Multi-Environment Snapshots**: Capture and version configuration states for **Development**, **Testing**, and **Production**.
+- **Flexible Ingestion**: Ingest configurations via `.env` file syntax, structured JSON, or direct key-value inputs.
+- **Deterministic Comparison**: Side-by-side differential engine identifying matching keys, value discrepancies, missing keys, and unexpected variables without external AI dependencies.
+- **Configurable Validation Rules**: Enforce required keys, numeric range bounds, URL/email formats, and environment-specific constraints.
+- **Automated Secret Masking**: Proactively detects and redacts tokens, credentials, and private keys in both the user interface and export files.
+- **Drift Reports & Export**: Categorize findings by severity (`Error`, `Warning`, `Info`) and export reports as JSON or CSV.
+- **Audit History**: Preserve snapshot versions and historical comparison audits over time.
+
+---
+
+## 3. Architecture & System Design
+
+```text
+configdrift/
+├── client/                     # React 18+ (Vite) + Tailwind CSS Frontend
+│   ├── src/
+│   │   ├── components/         # Reusable UI elements (Modals, Badges, Tables, Inputs)
+│   │   ├── contexts/           # State providers (AuthContext, etc.)
+│   │   ├── pages/              # Application views (Dashboard, Workspace, Login)
+│   │   ├── services/           # Axios API services
+│   │   ├── App.jsx             # Root application and routing
+│   │   ├── index.css           # Tailwind styling directives
+│   │   └── main.jsx            # Entry point
+│   ├── tailwind.config.js      # Design tokens and theme settings
+│   ├── vite.config.js          # Build configuration with backend proxy
+│   └── package.json
+├── server/                     # Node.js + Express.js Backend
+│   ├── src/
+│   │   ├── config/             # Database connection and environment config
+│   │   ├── controllers/        # Request handlers (auth, project, snapshot, compare)
+│   │   ├── middleware/         # Security guards, JWT validation, error handling
+│   │   ├── models/             # Mongoose schemas (User, Project, Snapshot, Rule, Report)
+│   │   ├── routes/             # RESTful API route definitions
+│   │   ├── services/           # Comparison engine, rule evaluator, env parser
+│   │   ├── utils/              # Token generators, secret detectors
+│   │   ├── app.js              # Express app setup and middleware pipeline
+│   │   └── server.js           # HTTP listener
+│   ├── tests/                  # Jest & Supertest automated test suites
+│   ├── .env.example
+│   └── package.json
+├── docs/                       # Specifications and diagrams
+├── .env.example                # Root environment variable documentation
+├── .gitignore                  # Git ignore rules for node_modules, .env, build output
+├── package.json                # Root orchestration for running client & server concurrently
+└── README.md
+```
+
+---
+
+## 4. Technology Stack
 
 - **Frontend**: React.js with Vite
 - **Styling**: Tailwind CSS
@@ -46,59 +95,7 @@ When configurations between environments drift silently:
 - **Database**: MongoDB with Mongoose (Local `mongodb://127.0.0.1:27017/configdrift` or MongoDB Atlas)
 - **API Communication**: RESTful JSON APIs
 - **Testing**: Jest and Supertest
-- **Version Control**: Git & GitHub with feature-branch PR workflow
-
----
-
-## 3. 6-Phase Implementation Roadmap
-
-The project alternates sequentially between **Primary Developer** and **Teammate**:
-
-| Phase | Developer | Branch Name | Scope / Deliverable |
-| :---: | :--- | :--- | :--- |
-| **Phase 1** | **Primary (You)** | `main` | **Project Foundation**: Monorepo scaffold, Express server, React + Tailwind client, health check API, Git repo initialization. |
-| **Phase 2** | **Teammate** | `feature/user-auth` | **Authentication & Project Workspace**: User registration, login, JWT token middleware, protected routes, Project CRUD dashboard & empty states. |
-| **Phase 3** | **Primary (You)** | `feature/env-snapshots` | **Environment Snapshots & Parsers**: Dev, Test, Prod snapshot models, key-value editor, `.env` and JSON parsers, and secret auto-detection. |
-| **Phase 4** | **Teammate** | `feature/comparison-engine` | **Deterministic Comparison Engine**: Side-by-side diff matrix, missing/extra/mismatch indicators, unit tests, comparison API & UI. |
-| **Phase 5** | **Primary (You)** | `feature/validation-rules` | **Validation Rules Engine & Guardrails**: Configurable rules (numeric ranges, regex patterns, forbidden prod flags), severity classification. |
-| **Phase 6** | **Teammate** | `feature/drift-reports` | **Drift Reports, Masking, Audit & Export**: Historical timeline, secret unmasking toggle, JSON and CSV exportable drift reports. |
-
----
-
-## 4. Project Architecture
-
-```text
-configdrift/
-├── client/                     # React 18+ (Vite) + Tailwind CSS Frontend
-│   ├── src/
-│   │   ├── components/         # Reusable UI components (Buttons, Badges, Modals)
-│   │   ├── layouts/            # Dashboard & Auth layouts
-│   │   ├── pages/              # Application views
-│   │   ├── services/           # Axios API service layer (api.js)
-│   │   ├── App.jsx             # Main router & root application component
-│   │   ├── index.css           # Tailwind CSS directives
-│   │   └── main.jsx            # React DOM entry point
-│   ├── tailwind.config.js      # Tailwind configuration
-│   ├── vite.config.js          # Vite config with /api proxy to localhost:5000
-│   └── package.json
-├── server/                     # Node.js + Express.js Backend
-│   ├── src/
-│   │   ├── config/             # Database connection (db.js)
-│   │   ├── middleware/         # Error handling, Auth guards, Rate limiting
-│   │   ├── models/             # Mongoose schemas (User, Project, Snapshot, Rule, Report)
-│   │   ├── routes/             # Express API routes
-│   │   ├── services/           # Comparison engine, validation rule evaluator, parsers
-│   │   ├── app.js              # Express app setup, CORS, Helmet, routes mounting
-│   │   └── server.js           # HTTP listener entry point
-│   ├── tests/                  # Jest & Supertest test suites
-│   ├── .env.example
-│   └── package.json
-├── docs/                       # Architectural diagrams & specifications
-├── .env.example                # Root environment variable documentation
-├── .gitignore                  # Git ignore rules for node_modules, .env, build output
-├── package.json                # Root package for running client & server concurrently
-└── README.md
-```
+- **Security**: Helmet, CORS, bcryptjs, JSON Web Tokens (JWT)
 
 ---
 
@@ -120,14 +117,13 @@ Install all root, server, and client dependencies:
 ```bash
 npm run install:all
 ```
-*(Or install individually: `npm install`, `cd server && npm install`, `cd client && npm install`)*
 
 ### 3. Configure Environment Variables
 Copy `.env.example` to `.env` in the `server` directory:
 ```bash
 cp server/.env.example server/.env
 ```
-Ensure `MONGODB_URI` points to your local MongoDB:
+Ensure `MONGODB_URI` points to your MongoDB instance:
 ```ini
 PORT=5000
 NODE_ENV=development
@@ -138,7 +134,7 @@ CLIENT_URL=http://localhost:5173
 ```
 
 ### 4. Run the Application
-You can run both client and server concurrently from the root directory:
+Run both client and server concurrently from the root directory:
 ```bash
 npm run dev
 ```
@@ -147,7 +143,7 @@ Alternatively, run in separate terminals:
 - **Server**: `npm run dev:server` (runs on `http://localhost:5000`)
 - **Client**: `npm run dev:client` (runs on `http://localhost:5173`)
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Access the web interface at [http://localhost:5173](http://localhost:5173).
 
 ---
 
@@ -164,31 +160,40 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 7. API Endpoints
+## 7. API Reference
 
-### System & Diagnostics
-- `GET /api/health` — Verifies backend uptime and MongoDB connection status.
+### System
+- `GET /api/health` — Service health and database connection status.
 - `GET /` — API welcome message.
 
-### Authentication (Phase 2)
-- `POST /api/auth/register` — Register user.
-- `POST /api/auth/login` — Login user and receive token.
-- `GET /api/auth/me` — Current user profile.
+### Authentication
+- `POST /api/auth/register` — Register a new user account.
+- `POST /api/auth/login` — Authenticate and receive a JWT token.
+- `GET /api/auth/me` — Retrieve the authenticated user's profile.
 
-### Projects & Snapshots (Phases 2 & 3)
-- `GET /api/projects` — List user's projects.
-- `POST /api/projects` — Create project.
-- `GET /api/projects/:id` — Get project details.
-- `POST /api/projects/:projectId/snapshots` — Upload or save environment snapshot.
+### Projects
+- `GET /api/projects` — List all projects owned by the authenticated user.
+- `POST /api/projects` — Create a new project workspace.
+- `GET /api/projects/:id` — Get project details by ID.
+- `PUT /api/projects/:id` — Update project name or description.
+- `DELETE /api/projects/:id` — Delete a project and associated records.
 
-### Comparison & Validation (Phases 4 & 5)
+### Environment Snapshots
+- `GET /api/projects/:projectId/snapshots` — List snapshots for a project (filterable by `?environment=`).
+- `GET /api/projects/:projectId/snapshots/latest` — Fetch the latest snapshot for each environment.
+- `POST /api/projects/:projectId/snapshots` — Create a new snapshot from `.env`, JSON, or key-value entries.
+- `GET /api/projects/:projectId/snapshots/:id` — Retrieve snapshot details by ID.
+- `DELETE /api/projects/:projectId/snapshots/:id` — Delete a snapshot.
+
+### Comparison & Validation
 - `POST /api/projects/:projectId/compare` — Compare two environment snapshots side-by-side.
-- `GET /api/projects/:projectId/rules` — List validation rules.
-- `POST /api/projects/:projectId/rules` — Create validation rule.
+- `GET /api/projects/:projectId/rules` — List validation rules configured for a project.
+- `POST /api/projects/:projectId/rules` — Create a validation rule.
+- `DELETE /api/projects/:projectId/rules/:id` — Remove a validation rule.
 
-### Drift Reports & History (Phase 6)
-- `GET /api/projects/:projectId/reports` — Historical comparison reports.
-- `GET /api/projects/:projectId/reports/:id/export` — Export report (JSON/CSV).
+### Drift Reports
+- `GET /api/projects/:projectId/reports` — List past comparison reports.
+- `GET /api/projects/:projectId/reports/:id/export` — Export a report in JSON or CSV format.
 
 ---
 
@@ -198,29 +203,17 @@ Execute backend API and integration test suites:
 ```bash
 npm run test:server
 ```
-or from the root:
+or from the root directory:
 ```bash
 npm test
 ```
 
 ---
 
-## 9. Two-Person GitHub Collaboration Workflow
+## 9. Security & Secret Protection
 
-1. The default branch is **`main`**.
-2. Work is developed on isolated feature branches (e.g. `feature/user-auth`, `feature/env-snapshots`).
-3. After completing and testing a phase locally, push the branch to GitHub:
-   ```bash
-   git checkout -b feature/your-feature-name
-   # Implement and test
-   git add .
-   git commit -m "feat: description of changes"
-   git push -u origin feature/your-feature-name
-   ```
-4. Open a Pull Request targeting `main`.
-5. The other teammate reviews and merges the PR.
-6. The next developer pulls the updated `main` branch before starting their assigned phase:
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
+- Sensitive keys containing keywords such as `SECRET`, `TOKEN`, `PASSWORD`, `KEY`, or `PRIVATE` are automatically flagged.
+- Secret values are masked in the UI by default and can only be temporarily toggled by authenticated owners.
+- Unmasked secrets are never included in exported drift reports without explicit confirmation.
+- Passwords are encrypted using bcrypt with salt rounds $\ge 10$.
+- All project and snapshot operations enforce user authorization checks.

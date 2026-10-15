@@ -66,4 +66,31 @@ export const deleteProjectApi = async (id) => {
   return response.data;
 };
 
+// Snapshot Services
+export const getSnapshotsApi = async (projectId, environment) => {
+  const query = environment ? `?environment=${environment}` : '';
+  const response = await api.get(`/projects/${projectId}/snapshots${query}`);
+  return response.data;
+};
+
+export const getLatestSnapshotsApi = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/snapshots/latest`);
+  return response.data;
+};
+
+export const getSnapshotByIdApi = async (projectId, snapshotId) => {
+  const response = await api.get(`/projects/${projectId}/snapshots/${snapshotId}`);
+  return response.data;
+};
+
+export const createSnapshotApi = async (projectId, snapshotData) => {
+  const response = await api.post(`/projects/${projectId}/snapshots`, snapshotData);
+  return response.data;
+};
+
+export const deleteSnapshotApi = async (projectId, snapshotId) => {
+  const response = await api.delete(`/projects/${projectId}/snapshots/${snapshotId}`);
+  return response.data;
+};
+
 export default api;

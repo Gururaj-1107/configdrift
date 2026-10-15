@@ -20,4 +20,9 @@ router.route('/:id')
   .put(updateProject)
   .delete(deleteProject);
 
+const snapshotRoutes = require('./snapshotRoutes');
+
+// Nested Snapshot routes
+router.use('/:projectId/snapshots', snapshotRoutes);
+
 module.exports = router;
