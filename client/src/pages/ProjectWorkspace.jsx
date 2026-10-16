@@ -43,6 +43,10 @@ import DriftReportsTab from '../components/DriftReportsTab';
    CONSTANTS
    ============================ */
 
+/* ============================
+   CONSTANTS
+   ============================ */
+
 const ENVIRONMENTS = [
   { id: 'development', label: 'Development', short: 'Dev',  variant: 'dev'  },
   { id: 'testing',     label: 'Testing',     short: 'Test', variant: 'test' },

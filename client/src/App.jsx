@@ -80,6 +80,7 @@ function AppContent() {
           >
             <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/15 transition-colors">
               <ShieldCheck className="w-5 h-5" />
+              <ShieldCheck className="w-4.5 h-4.5" />
             </div>
             <div className="flex items-center gap-2">
               <span className="font-bold tracking-tight text-slate-100 text-base">ConfigDrift</span>
@@ -169,6 +170,7 @@ function AppContent() {
                       icon: Layers,
                       color: 'text-emerald-400',
                       bg: 'bg-emerald-500/10',
+                      bg: 'bg-emerald-500/8',
                       title: 'Snapshot Management',
                       desc: 'Ingest .env or JSON configs, version them, and compare across branches.'
                     },
@@ -176,6 +178,7 @@ function AppContent() {
                       icon: GitCompare,
                       color: 'text-blue-400',
                       bg: 'bg-blue-500/10',
+                      bg: 'bg-blue-500/8',
                       title: 'Drift Detection',
                       desc: 'Algorithmically surfaces missing, extra, and mismatched environment keys.'
                     },
@@ -183,6 +186,7 @@ function AppContent() {
                       icon: FileCheck2,
                       color: 'text-purple-400',
                       bg: 'bg-purple-500/10',
+                      bg: 'bg-purple-500/8',
                       title: 'Rule Validation',
                       desc: 'Enforce numeric ranges, URL patterns, and production environment guards.'
                     },
@@ -190,6 +194,7 @@ function AppContent() {
                       icon: Lock,
                       color: 'text-amber-400',
                       bg: 'bg-amber-500/10',
+                      bg: 'bg-amber-500/8',
                       title: 'Secret Masking',
                       desc: 'Auto-redacts credentials, private keys, and auth tokens in every view.'
                     },
