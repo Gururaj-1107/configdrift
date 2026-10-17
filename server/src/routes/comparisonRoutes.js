@@ -5,7 +5,8 @@ const {
   saveReport,
   getReports,
   getReportById,
-  exportReport
+  exportReport,
+  deleteReport
 } = require('../controllers/comparisonController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -16,7 +17,10 @@ router.route('/reports')
   .post(saveReport)
   .get(getReports);
 
-router.get('/reports/:reportId', getReportById);
+router.route('/reports/:reportId')
+  .get(getReportById)
+  .delete(deleteReport);
+
 router.get('/reports/:reportId/export', exportReport);
 
 module.exports = router;

@@ -255,10 +255,33 @@ const exportReport = async (req, res) => {
   }
 };
 
+// @desc    Delete a saved drift report
+// @route   DELETE /api/projects/:projectId/reports/:reportId
+// @access  Private
+const deleteReport = async (req, res) => {
+  try {
+    const { projectId, reportId } = req.params;
+    await verifyOwnership(projectId, req.user._id);
+
+    const report = await DriftReport.findOneAndDelete({ _id: reportId, project: projectId });
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Drift report not found' });
+    }
+
+    res.status(200).json({ success: true, message: 'Drift report deleted successfully' });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   runComparison,
   saveReport,
   getReports,
   getReportById,
-  exportReport
+  exportReport,
+  deleteReport
 };

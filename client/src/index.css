@@ -77,10 +77,11 @@ textarea:focus-visible,
 select:focus-visible {
   outline: 2px solid rgba(16, 185, 129, 0.6);
   outline-offset: 0px;
-select:focus-visible,
+}
+
 button:focus-visible {
-  outline: none;
-  ring: 1px;
+  outline: 2px solid rgba(16, 185, 129, 0.6);
+  outline-offset: 1px;
 }
 
 /* ---- Text Selection ---- */

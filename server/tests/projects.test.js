@@ -6,6 +6,15 @@ const jwt = require('jsonwebtoken');
 
 jest.mock('../src/models/User');
 jest.mock('../src/models/Project');
+jest.mock('../src/models/Snapshot', () => ({
+  deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 })
+}));
+jest.mock('../src/models/ValidationRule', () => ({
+  deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 })
+}));
+jest.mock('../src/models/DriftReport', () => ({
+  deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 })
+}));
 
 describe('Project Endpoints', () => {
   const mockUserId = '507f1f77bcf86cd799439011';

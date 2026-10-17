@@ -31,7 +31,9 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: Math.floor(process.uptime()),
     database: {
-      status: dbStatus
+      status: dbStatus,
+      host: mongoose.connection.host || null,
+      name: mongoose.connection.name || null
     },
     version: '1.0.0'
   });

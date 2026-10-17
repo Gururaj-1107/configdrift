@@ -43,10 +43,6 @@ import DriftReportsTab from '../components/DriftReportsTab';
    CONSTANTS
    ============================ */
 
-/* ============================
-   CONSTANTS
-   ============================ */
-
 const ENVIRONMENTS = [
   { id: 'development', label: 'Development', short: 'Dev',  variant: 'dev'  },
   { id: 'testing',     label: 'Testing',     short: 'Test', variant: 'test' },
@@ -65,7 +61,7 @@ DATABASE_URL=mongodb://localhost:27017/myapp
 
 # Auth secrets (auto-detected)
 JWT_SECRET=super_secret_jwt_key_do_not_expose
-API_KEY=sk_live_abcdefg1234567890
+API_KEY=mock_api_key_sample_token_12345
 
 # Feature flags
 ENABLE_ANALYTICS=true
@@ -77,7 +73,7 @@ const SAMPLE_JSON = `{
   "API_TIMEOUT": 30000,
   "DATABASE_URL": "mongodb://localhost:27017/myapp",
   "JWT_SECRET": "super_secret_jwt_key_do_not_expose",
-  "API_KEY": "sk_live_abcdefg1234567890",
+  "API_KEY": "mock_api_key_sample_token_12345",
   "ENABLE_ANALYTICS": true,
   "MAX_UPLOAD_SIZE": 10
 }`;

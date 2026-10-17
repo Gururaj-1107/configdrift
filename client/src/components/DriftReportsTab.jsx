@@ -6,6 +6,7 @@ import {
   getDriftReportsApi,
   getDriftReportByIdApi,
   exportDriftReportApi,
+  deleteDriftReportApi,
 } from '../services/api';
 import {
   FileText,
@@ -19,6 +20,7 @@ import {
   AlertTriangle,
   XCircle,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 
 export default function DriftReportsTab({ project }) {
@@ -97,6 +99,23 @@ export default function DriftReportsTab({ project }) {
       toast.error(`Failed to export report as ${format.toUpperCase()}`);
     } finally {
       setExporting(null);
+    }
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (!window.confirm('Are you sure you want to delete this drift report?')) return;
+    try {
+      const res = await deleteDriftReportApi(project._id, reportId);
+      if (res.success) {
+        toast.success('Drift report deleted successfully');
+        setReports((prev) => prev.filter((r) => r._id !== reportId));
+        if (selectedReport?._id === reportId) {
+          setDetailModalOpen(false);
+          setSelectedReport(null);
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete report');
     }
   };
 
@@ -243,6 +262,15 @@ export default function DriftReportsTab({ project }) {
                     )}
                     <span>CSV</span>
                   </button>
+
+                  <button
+                    onClick={() => handleDeleteReport(rep._id)}
+                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500 hover:text-red-400 hover:border-red-900/60 transition-colors"
+                    title="Delete Drift Report"
+                    aria-label="Delete report"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             );
@@ -351,22 +379,32 @@ export default function DriftReportsTab({ project }) {
               </table>
             </div>
 
-            {/* Export buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            {/* Modal actions */}
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
               <button
-                onClick={() => handleExport(selectedReport._id, 'json')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg font-mono text-xs hover:text-white"
+                onClick={() => handleDeleteReport(selectedReport._id)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-950/40 border border-red-900/60 text-red-300 hover:bg-red-900/40 rounded-lg font-mono text-xs transition-colors"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download JSON</span>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Report</span>
               </button>
-              <button
-                onClick={() => handleExport(selectedReport._id, 'csv')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg font-mono text-xs hover:text-white"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download CSV</span>
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleExport(selectedReport._id, 'json')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg font-mono text-xs hover:text-white"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download JSON</span>
+                </button>
+                <button
+                  onClick={() => handleExport(selectedReport._id, 'csv')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg font-mono text-xs hover:text-white"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download CSV</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -128,6 +128,11 @@ export const exportDriftReportApi = async (projectId, reportId, format = 'json')
   return response.data;
 };
 
+export const deleteDriftReportApi = async (projectId, reportId) => {
+  const response = await api.delete(`/projects/${projectId}/reports/${reportId}`);
+  return response.data;
+};
+
 // Validation Rule Services
 export const getValidationRulesApi = async (projectId) => {
   const response = await api.get(`/projects/${projectId}/rules`);

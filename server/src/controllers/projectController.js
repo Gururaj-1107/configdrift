@@ -1,4 +1,7 @@
 const Project = require('../models/Project');
+const Snapshot = require('../models/Snapshot');
+const ValidationRule = require('../models/ValidationRule');
+const DriftReport = require('../models/DriftReport');
 
 // @desc    Get all projects for authenticated user
 // @route   GET /api/projects
@@ -133,7 +136,13 @@ const deleteProject = async (req, res, next) => {
       });
     }
 
-    await Project.findByIdAndDelete(req.params.id);
+    // Cascade delete associated snapshots, validation rules, and drift reports
+    await Promise.all([
+      Snapshot.deleteMany({ project: req.params.id }),
+      ValidationRule.deleteMany({ project: req.params.id }),
+      DriftReport.deleteMany({ project: req.params.id }),
+      Project.findByIdAndDelete(req.params.id)
+    ]);
 
     res.status(200).json({
       success: true,
