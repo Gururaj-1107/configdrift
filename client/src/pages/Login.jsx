@@ -47,7 +47,7 @@ export default function Login({ onSwitchToRegister }) {
     setEmail('demo@configdrift.com');
     setPassword('Password123!');
     setFieldError({});
-    toast.info('Demo credentials loaded!');
+    toast.info('Demo credentials loaded! Click "Sign In" to enter.');
   };
 
   const InputError = ({ msg }) =>
@@ -185,7 +185,7 @@ export default function Login({ onSwitchToRegister }) {
               onClick={handleFillDemo}
               className="text-emerald-400 hover:text-emerald-300 active:scale-[0.98] font-medium transition-all focus:outline-none hover:underline"
             >
-              Fill Demo Credentials
+              Fill Demo Credentials (demo@configdrift.com)
             </button>
           </div>
 
