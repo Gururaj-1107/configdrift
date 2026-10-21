@@ -8,6 +8,9 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // ── Security Headers (Helmet) ──────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
