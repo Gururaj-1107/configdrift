@@ -5,13 +5,11 @@
     {
       "source": "/(index|INDEX)\\.(html|htm|php)",
       "destination": "/",
-      "permanent": true,
       "statusCode": 301
     },
     {
       "source": "/(index|INDEX)",
       "destination": "/",
-      "permanent": true,
       "statusCode": 301
     }
   ]
