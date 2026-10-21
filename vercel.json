@@ -1,4 +1,7 @@
 {
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "trailingSlash": false,
   "redirects": [
     {
@@ -20,6 +23,31 @@
       "source": "/index",
       "destination": "/",
       "statusCode": 301
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/assets/(.*)$",
+      "headers": { "cache-control": "max-age=31536000, immutable" },
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "^/(robots\\.txt|favicon\\.ico|vite\\.svg|404\\.html)$",
+      "dest": "/$1"
+    },
+    {
+      "src": "^/(index\\.html|index\\.php|index\\.htm|index)$",
+      "status": 301,
+      "headers": { "Location": "/" }
+    },
+    {
+      "src": "^/$",
+      "dest": "/index.html"
+    },
+    {
+      "src": "^/.*$",
+      "status": 404,
+      "dest": "/404.html"
     }
   ]
 }
