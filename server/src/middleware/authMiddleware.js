@@ -10,10 +10,14 @@ const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || 'super_secret_jwt_key_for_development_configdrift'
-      );
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        return res.status(500).json({
+          success: false,
+          message: 'Server configuration error. JWT_SECRET is not set.'
+        });
+      }
+      const decoded = jwt.verify(token, jwtSecret);
 
       req.user = await User.findById(decoded.id).select('-password');
       if (!req.user) {

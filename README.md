@@ -1,3 +1,14 @@
+## ?? Live Deployment
+
+| Service | URL |
+|---------|-----|
+| **Frontend** (Vercel) | https://configdrift.vercel.app |
+| **Backend API** (Render) | https://configdrift-server.onrender.com |
+| **Database** | MongoDB Atlas (Free Tier) |
+
+> Update these URLs after deploying.
+
+---
 # ConfigDrift — Environment Configuration Validator
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
