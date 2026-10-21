@@ -31,8 +31,25 @@ app.use(helmet({
 }));
 
 // ── CORS ───────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://configdrift.vercel.app',
+  process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : null
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.some(o => o === cleanOrigin || o === origin)) {
+      return callback(null, true);
+    }
+    // Also allow any vercel preview deployment under this project
+    if (cleanOrigin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(new Error('Blocked by CORS: ' + origin));
+  },
   credentials: true
 }));
 
