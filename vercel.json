@@ -3,24 +3,16 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/index.html",
+      "source": "/(index|INDEX)\\.(html|htm|php)",
       "destination": "/",
-      "permanent": true
+      "permanent": true,
+      "statusCode": 301
     },
     {
-      "source": "/index.php",
+      "source": "/(index|INDEX)",
       "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/index",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/home",
-      "destination": "/",
-      "permanent": true
+      "permanent": true,
+      "statusCode": 301
     }
   ]
 }
