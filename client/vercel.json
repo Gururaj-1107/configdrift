@@ -1,16 +1,29 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/(index|INDEX)\\.(html|htm|php)",
+      "source": "/index.html",
       "destination": "/",
       "statusCode": 301
     },
     {
-      "source": "/(index|INDEX)",
+      "source": "/index.php",
+      "destination": "/",
+      "statusCode": 301
+    },
+    {
+      "source": "/index.htm",
+      "destination": "/",
+      "statusCode": 301
+    },
+    {
+      "source": "/index",
       "destination": "/",
       "statusCode": 301
     }
+  ],
+  "rewrites": [
+    { "source": "/((?!404).*)", "destination": "/" }
   ]
 }
