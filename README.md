@@ -1,4 +1,4 @@
-## ?? Live Deployment
+## Live Deployment
 
 | Service | URL |
 |---------|-----|
@@ -6,7 +6,6 @@
 | **Backend API** (Render) | https://configdrift-server.onrender.com |
 | **Database** | MongoDB Atlas (Free Tier) |
 
-> Update these URLs after deploying.
 
 ---
 # ConfigDrift — Environment Configuration Validator
